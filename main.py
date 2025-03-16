@@ -188,7 +188,7 @@ class Interpreter:
             return self.variables[expr]
         return expr
 
-    def apply_operation(self, op, left, right):  # Added operator handling
+    def apply_operation(self, op, left, right):
         if op == '+':
             return left + right
         elif op == '-':
