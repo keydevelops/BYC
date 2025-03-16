@@ -1,4 +1,5 @@
 import re
+import sys
 
 class Lexer:
     def init(self, source_code):
@@ -174,12 +175,16 @@ class Interpreter:
         else:
             return expr
 
-# сюда пишите код который хотите вывести 
-source_code = ""
-print('Hello World!')
-for i in range(0,100):
-    print(i)
-""
+if len(sys.argv) != 2:
+    print("Usage: python main.py <filename>")
+    sys.exit(1)
+
+try:
+    with open(sys.argv[1], 'r') as file:
+        source_code = file.read()
+except FileNotFoundError:
+    print(f"Error: File {sys.argv[1]} not found")
+    sys.exit(1)
 
 lexer = Lexer(source_code)
 tokens = lexer.tokenize()
