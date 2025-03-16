@@ -2,7 +2,7 @@ import re
 import sys
 
 class Lexer:
-    def init(self, source_code):
+    def __init__(self, source_code):
         self.source_code = source_code
         self.tokens = []
         self.keywords = ['int', 'string', 'if', 'else', 'for', 'print', 'range']
@@ -39,7 +39,7 @@ class Lexer:
         return self.tokens
 
 class Parser:
-    def init(self, tokens):
+    def __init__(self, tokens):
         self.tokens = tokens
         self.current_token = None
         self.next_token()
@@ -116,7 +116,7 @@ class Parser:
         expr = self.parse_expression()
         return ('PRINT', expr)
 
-def parse_expression(self):
+    def parse_expression(self):
         if self.current_token[0] == 'LPAREN':
             self.next_token()
             expr = self.parse_expression()
@@ -126,12 +126,18 @@ def parse_expression(self):
             return expr
         elif self.current_token[0] in ['NUMBER', 'STRING', 'IDENT']:
             value = self.current_token[1]
+            token_type = self.current_token[0]
             self.next_token()
-            return value
+            if self.current_token and self.current_token[0] == 'OP':
+                op = self.current_token[1]
+                self.next_token()
+                right = self.parse_expression()
+                return ('OPERATION', op, (token_type, value), right)
+            return (token_type, value)
         else:
             raise RuntimeError(f'Unexpected token in expression: {self.current_token[0]}')
 
-def parse_block(self):
+    def parse_block(self):
         statements = []
         while self.current_token and self.current_token[1] != '}':
             statements.append(self.parse_statement())
@@ -140,7 +146,7 @@ def parse_block(self):
         return statements
 
 class Interpreter:
-    def init(self):
+    def __init__(self):
         self.variables = {}
 
     def interpret(self, ast):
@@ -151,7 +157,7 @@ class Interpreter:
         if node[0] == 'DECLARE':
             _, type_, name, value = node
             if value is not None:
-                self.variables[name] = value
+                self.variables[name] = self.evaluate(value)
         elif node[0] == 'IF':
             _, condition, if_block, else_block = node
             if self.evaluate(condition):
@@ -160,7 +166,7 @@ class Interpreter:
                 self.interpret(else_block)
         elif node[0] == 'FOR':
             _, ident, range_expr, block = node
-            for i in range(range_expr):
+            for i in range(self.evaluate(range_expr)):
                 self.variables[ident] = i
                 self.interpret(block)
         elif node[0] == 'PRINT':
@@ -169,11 +175,41 @@ class Interpreter:
 
     def evaluate(self, expr):
         if isinstance(expr, tuple):
-            return self.evaluate(expr)
+            if expr[0] == 'OPERATION':
+                _, op, left, right = expr
+                left_val = self.evaluate(left)
+                right_val = self.evaluate(right)
+                return self.apply_operation(op, left_val, right_val)
+            elif expr[0] in ['NUMBER', 'STRING']:
+                return expr[1]
+        elif isinstance(expr, (int, str)):
+            return expr
         elif expr in self.variables:
             return self.variables[expr]
-        else:
-            return expr
+        return expr
+
+    def apply_operation(self, op, left, right):  # Added operator handling
+        if op == '+':
+            return left + right
+        elif op == '-':
+            return left - right
+        elif op == '*':
+            return left * right
+        elif op == '/':
+            return left / right
+        elif op == '==':
+            return left == right
+        elif op == '<':
+            return left < right
+        elif op == '>':
+            return left > right
+        elif op == '<=':
+            return left <= right
+        elif op == '>=':
+            return left >= right
+        elif op == '!=':
+            return left != right
+        raise RuntimeError(f'Unknown operator: {op}')
 
 if len(sys.argv) != 2:
     print("Usage: python main.py <filename>")
